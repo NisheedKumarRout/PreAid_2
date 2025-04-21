@@ -45,6 +45,7 @@ body {
   color: var(--neutral-800);
   position: relative;
   line-height: 1.6;
+  overflow-x: hidden; /* Prevent horizontal overflow */
 }
 
 .background-overlay {
@@ -65,12 +66,25 @@ body {
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  padding: 0 15px; /* Add horizontal padding to prevent edge content clipping */
 }
 
 /* Typography */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   line-height: 1.2;
+  overflow-wrap: break-word; /* Handle long words */
+  word-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Text overflow handling for all text elements */
+p, span, div, li, a, button {
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  -ms-word-break: break-all;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 /* Header Styles */
@@ -78,6 +92,7 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
   padding: 1.5rem 0;
   animation: slide-down 0.5s ease-out;
+  width: 100%;
 }
 
 .logo-container {
@@ -96,6 +111,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   margin-right: 0.75rem;
+  flex-shrink: 0; /* Prevent shrinking on small screens */
 }
 
 .icon {
@@ -128,6 +144,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   padding: 1rem 0 2rem;
+  width: 100%;
 }
 
 .form-container {
@@ -179,6 +196,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   display: flex;
   align-items: center;
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .divider {
@@ -236,6 +254,7 @@ h1, h2, h3, h4, h5, h6 {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease, padding 0.3s ease;
+  width: 100%;
 }
 
 .result.show {
@@ -245,6 +264,8 @@ h1, h2, h3, h4, h5, h6 {
   padding: 1.5rem;
   max-height: 2000px;
   animation: slide-up 0.5s ease-out;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .result-header {
@@ -252,6 +273,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   margin-bottom: 1rem;
   position: relative;
+  flex-wrap: wrap; /* Allow wrapping if needed */
 }
 
 .result-title {
@@ -259,11 +281,16 @@ h1, h2, h3, h4, h5, h6 {
   font-size: 1.125rem;
   color: var(--neutral-800);
   flex: 1;
+  min-width: 200px; /* Ensure it doesn't become too narrow */
+  margin-bottom: 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .result-actions {
   display: flex;
   gap: 8px;
+  flex-shrink: 0; /* Prevent shrinking */
+  margin-left: auto; /* Push to right if space is available */
 }
 
 /* Speech button styles */
@@ -279,6 +306,7 @@ h1, h2, h3, h4, h5, h6 {
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
+  flex-shrink: 0;
 }
 
 .speak-button:hover, .share-button:hover {
@@ -327,6 +355,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   transition: all 0.3s ease;
   opacity: 0;
+  padding: 10px; /* Add padding for small screens */
 }
 
 .share-modal.show {
@@ -343,6 +372,9 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   animation: slide-up 0.4s ease-out;
+  max-height: 90vh; /* Limit height and add scrolling if needed */
+  display: flex;
+  flex-direction: column;
 }
 
 .share-modal-header {
@@ -352,6 +384,7 @@ h1, h2, h3, h4, h5, h6 {
   padding: 1rem 1.5rem;
   background-color: var(--primary-50);
   border-bottom: 1px solid var(--primary-100);
+  flex-shrink: 0; /* Prevent shrinking */
 }
 
 .share-modal-header h3 {
@@ -368,6 +401,8 @@ h1, h2, h3, h4, h5, h6 {
   line-height: 1;
   cursor: pointer;
   transition: all 0.2s;
+  padding: 0.25rem;
+  flex-shrink: 0;
 }
 
 .close-share-modal:hover {
@@ -376,6 +411,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .share-modal-body {
   padding: 1.5rem;
+  overflow-y: auto; /* Enable scrolling if content is too tall */
 }
 
 .share-modal-body p {
@@ -402,6 +438,7 @@ h1, h2, h3, h4, h5, h6 {
   transition: all 0.2s;
   gap: 8px;
   color: var(--neutral-800);
+  text-align: center;
 }
 
 .share-option-button:hover {
@@ -416,10 +453,13 @@ h1, h2, h3, h4, h5, h6 {
 
 .share-option-button svg {
   color: var(--primary-600);
+  flex-shrink: 0;
 }
 
 .result-content {
   line-height: 1.6;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .result-content p {
@@ -457,6 +497,7 @@ h1, h2, h3, h4, h5, h6 {
   width: 60px;
   height: 60px;
   margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .loading-pulse {
@@ -483,6 +524,7 @@ h1, h2, h3, h4, h5, h6 {
 .loading-text {
   color: var(--neutral-600);
   font-size: 0.9rem;
+  text-align: center;
 }
 
 @keyframes pulse {
@@ -525,6 +567,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .warning-message, .error-message {
   flex: 1;
+  word-break: break-word;
 }
 
 .warning-message {
@@ -552,6 +595,7 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   justify-content: center;
   animation: float 3s ease-in-out infinite;
+  flex-shrink: 0;
 }
 
 .icon1 {
@@ -584,6 +628,7 @@ h1, h2, h3, h4, h5, h6 {
   text-align: center;
   padding: 1.5rem 0;
   color: rgba(255, 255, 255, 0.8);
+  width: 100%;
 }
 
 .footer p {
@@ -673,6 +718,14 @@ h1, h2, h3, h4, h5, h6 {
   .share-options {
     grid-template-columns: repeat(2, 1fr);
   }
+  .result-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .result-actions {
+    margin-top: 0.5rem;
+    margin-left: 0;
+  }
 }
 
 @media (max-width: 480px) {
@@ -698,5 +751,9 @@ h1, h2, h3, h4, h5, h6 {
   }
   .share-modal-content {
     width: 95%;
+  }
+  .result-title {
+    font-size: 1rem;
+    width: 100%;
   }
 }
