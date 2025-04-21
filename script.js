@@ -134,18 +134,11 @@ document.addEventListener('DOMContentLoaded', function () {
           </svg>
         </div>
         <h3 class="result-title">Health Advice for "${query}"</h3>
-        <div class="result-actions">
-          <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
-            <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-            </svg>
-          </button>
-          <button id="share-advice" class="share-button" aria-label="Share advice" title="Share advice">
-            <svg xmlns="http://www.w3.org/2000/svg" class="share-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-            </svg>
-          </button>
-        </div>
+        <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
+          <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+          </svg>
+        </button>
       </div>
       <div class="result-content">${formattedAdvice}</div>
       <div class="disclaimer-note">
@@ -161,89 +154,9 @@ document.addEventListener('DOMContentLoaded', function () {
       speakButton.addEventListener('click', () => speakText(plainTextAdvice));
     }
 
-    // ... share button logic remains the same
-
-    const shareButton = document.getElementById('share-advice');
-    const shareModal = document.getElementById('share-modal');
-    const closeShareModal = document.getElementById('close-share-modal');
-    const shareTitle = `Health advice for: ${query}`;
-    const shareText = `Health advice from PreAid: ${plainTextAdvice.substring(0, 100)}...`;
-
-    if (shareButton) {
-      shareButton.addEventListener('click', () => {
-        if (shareModal) {
-          shareModal.classList.add('show');
-        }
-      });
-    }
-
-    if (closeShareModal) {
-      closeShareModal.addEventListener('click', () => {
-        if (shareModal) {
-          shareModal.classList.remove('show');
-        }
-      });
-    }
-
-    window.addEventListener('click', (e) => {
-      if (e.target === shareModal) {
-        shareModal.classList.remove('show');
-      }
-    });
-
-    const emailButton = document.getElementById('share-email');
-    if (emailButton) {
-      emailButton.addEventListener('click', () => {
-        const mailtoLink = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(plainTextAdvice)}`;
-        window.open(mailtoLink);
-        shareModal.classList.remove('show');
-      });
-    }
-
-    const whatsappButton = document.getElementById('share-whatsapp');
-    if (whatsappButton) {
-      whatsappButton.addEventListener('click', () => {
-        const whatsappLink = `https://wa.me/?text=${encodeURIComponent(`${shareTitle}\n\n${plainTextAdvice}`)}`;
-        window.open(whatsappLink);
-        shareModal.classList.remove('show');
-      });
-    }
-
-    const smsButton = document.getElementById('share-sms');
-    if (smsButton) {
-      smsButton.addEventListener('click', () => {
-        const smsLink = `sms:?body=${encodeURIComponent(`${shareTitle}\n\n${plainTextAdvice}`)}`;
-        window.open(smsLink);
-        shareModal.classList.remove('show');
-      });
-    }
-
-    const copyButton = document.getElementById('share-copy');
-    if (copyButton) {
-      copyButton.addEventListener('click', () => {
-        const tempElement = document.createElement('textarea');
-        tempElement.value = `${shareTitle}\n\n${plainTextAdvice}`;
-        document.body.appendChild(tempElement);
-        tempElement.select();
-
-        try {
-          document.execCommand('copy');
-          copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!`;
-
-          setTimeout(() => {
-            copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copy Link`;
-          }, 2000);
-        } catch (err) {
-          console.error('Failed to copy: ', err);
-        }
-
-        document.body.removeChild(tempElement);
-
-        setTimeout(() => {
-          shareModal.classList.remove('show');
-        }, 1500);
-      });
-    }
+    setTimeout(() => {
+      adviceResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }, 100);
   }
 
   function stripHtmlTags(html) {
@@ -290,7 +203,9 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="${isInput ? 'warning-icon' : 'error-icon'}">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="${isInput ? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}"/>
+              d="${isInput
+        ? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+        : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}"/>
           </svg>
         </div>
         <div class="${isInput ? 'warning-message' : 'error-message'}">${msg}</div>
@@ -340,6 +255,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
       utterance.onstart = () => {
         speakButton?.classList.add('speaking');
+        speakButton?.setAttribute('aria-label', 'Stop speaking');
+        speakButton?.setAttribute('title', 'Stop speaking');
+      };
+
+      utterance.onend = () => {
+        speakButton?.classList.remove('speaking');
         speakButton?.setAttribute('aria-label', 'Listen to advice');
         speakButton?.setAttribute('title', 'Listen to advice');
         currentUtterance = null;
