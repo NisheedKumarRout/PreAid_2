@@ -134,11 +134,18 @@ document.addEventListener('DOMContentLoaded', function () {
           </svg>
         </div>
         <h3 class="result-title">Health Advice for "${query}"</h3>
-        <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
-          <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-          </svg>
-        </button>
+        <div class="result-actions">
+          <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
+            <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            </svg>
+          </button>
+          <button id="share-advice" class="share-button" aria-label="Share advice" title="Share advice">
+            <svg xmlns="http://www.w3.org/2000/svg" class="share-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="result-content">${formattedAdvice}</div>
       <div class="disclaimer-note">
@@ -149,14 +156,153 @@ document.addEventListener('DOMContentLoaded', function () {
     adviceResult.innerHTML = adviceHTML;
     adviceResult.classList.add('show');
 
+    // Add share modal to the DOM if it doesn't exist
+    if (!document.getElementById('share-modal')) {
+      const shareModalHTML = `
+        <div id="share-modal" class="share-modal">
+          <div class="share-modal-content">
+            <div class="share-modal-header">
+              <h3>Share Health Advice</h3>
+              <button id="close-share-modal" class="close-share-modal">&times;</button>
+            </div>
+            <div class="share-modal-body">
+              <p>Choose how you'd like to share:</p>
+              <div class="share-options">
+                <button id="share-email" class="share-option-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  Email
+                </button>
+                <button id="share-whatsapp" class="share-option-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17.498 14.382c-.301-.15-1.767-.867-2.04-.966-.273-.101-.473-.15-.673.15-.197.295-.771.964-.944 1.162-.175.195-.349.21-.646.075-.3-.15-1.263-.465-2.403-1.485-.888-.795-1.484-1.77-1.66-2.07-.174-.3-.019-.465.13-.615.136-.135.301-.345.451-.523.146-.181.194-.301.297-.496.1-.21.049-.375-.025-.524-.075-.15-.672-1.62-.922-2.206-.241-.584-.486-.51-.672-.51-.172-.015-.371-.015-.571-.015-.2 0-.523.074-.797.359-.273.3-1.045 1.02-1.045 2.475s1.07 2.865 1.219 3.075c.149.195 2.105 3.195 5.1 4.485.714.3 1.27.48 1.704.629.714.227 1.365.195 1.88.121.574-.091 1.767-.721 2.016-1.426.255-.705.255-1.29.18-1.425-.074-.135-.27-.21-.57-.345z"/>
+                    <path d="M20.52 3.449a12.871 12.871 0 00-9.07-3.769 13 13 0 00-11.092 19.9l-1.352 4.943 5.046-1.336A13.039 13.039 0 0012 24c6.988 0 12.5-5.512 12.5-12.5 0-3.248-1.23-6.253-3.48-8.501zM12 22.125a10.954 10.954 0 01-5.907-1.729l-.422-.254-4.395 1.156.934-3.85-.422-.422A10.919 10.919 0 012.625 12c0-5.964 4.8-10.956 10.794-10.956 2.934 0 5.612 1.148 7.699 3.235a10.87 10.87 0 013.117 7.723c-.003 6.157-4.984 11.125-11.235 11.125z"/>
+                  </svg>
+                  WhatsApp
+                </button>
+                <button id="share-sms" class="share-option-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  SMS
+                </button>
+                <button id="share-copy" class="share-option-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  Copy Text
+                </button>
+                <button id="share-twitter" class="share-option-button">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"></path>
+                  </svg>
+                  Twitter
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+      document.body.insertAdjacentHTML('beforeend', shareModalHTML);
+    }
+
     const speakButton = document.getElementById('speak-advice');
     if (speakButton) {
       speakButton.addEventListener('click', () => speakText(plainTextAdvice));
     }
 
-    setTimeout(() => {
-      adviceResult.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
+    const shareButton = document.getElementById('share-advice');
+    const shareModal = document.getElementById('share-modal');
+    const closeShareModal = document.getElementById('close-share-modal');
+    const shareTitle = `Health advice for: ${query}`;
+    const shareText = `Health advice from PreAid: ${plainTextAdvice.substring(0, 100)}...`;
+
+    if (shareButton) {
+      shareButton.addEventListener('click', () => {
+        if (shareModal) {
+          shareModal.classList.add('show');
+        }
+      });
+    }
+
+    if (closeShareModal) {
+      closeShareModal.addEventListener('click', () => {
+        if (shareModal) {
+          shareModal.classList.remove('show');
+        }
+      });
+    }
+
+    window.addEventListener('click', (e) => {
+      if (e.target === shareModal) {
+        shareModal.classList.remove('show');
+      }
+    });
+
+    const emailButton = document.getElementById('share-email');
+    if (emailButton) {
+      emailButton.addEventListener('click', () => {
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent(plainTextAdvice)}`;
+        window.open(mailtoLink);
+        shareModal.classList.remove('show');
+      });
+    }
+
+    const whatsappButton = document.getElementById('share-whatsapp');
+    if (whatsappButton) {
+      whatsappButton.addEventListener('click', () => {
+        const whatsappLink = `https://wa.me/?text=${encodeURIComponent(`${shareTitle}\n\n${plainTextAdvice}`)}`;
+        window.open(whatsappLink);
+        shareModal.classList.remove('show');
+      });
+    }
+
+    const smsButton = document.getElementById('share-sms');
+    if (smsButton) {
+      smsButton.addEventListener('click', () => {
+        const smsLink = `sms:?body=${encodeURIComponent(`${shareTitle}\n\n${plainTextAdvice}`)}`;
+        window.open(smsLink);
+        shareModal.classList.remove('show');
+      });
+    }
+
+    const twitterButton = document.getElementById('share-twitter');
+    if (twitterButton) {
+      twitterButton.addEventListener('click', () => {
+        const twitterText = `${shareTitle.substring(0, 50)}... ${plainTextAdvice.substring(0, 100)}...`;
+        const twitterLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`;
+        window.open(twitterLink);
+        shareModal.classList.remove('show');
+      });
+    }
+
+    const copyButton = document.getElementById('share-copy');
+    if (copyButton) {
+      copyButton.addEventListener('click', () => {
+        const tempElement = document.createElement('textarea');
+        tempElement.value = `${shareTitle}\n\n${plainTextAdvice}`;
+        document.body.appendChild(tempElement);
+        tempElement.select();
+
+        try {
+          document.execCommand('copy');
+          copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg> Copied!`;
+
+          setTimeout(() => {
+            copyButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg> Copy Text`;
+          }, 2000);
+        } catch (err) {
+          console.error('Failed to copy: ', err);
+        }
+
+        document.body.removeChild(tempElement);
+
+        setTimeout(() => {
+          shareModal.classList.remove('show');
+        }, 1500);
+      });
+    }
   }
 
   function stripHtmlTags(html) {
@@ -203,9 +349,7 @@ document.addEventListener('DOMContentLoaded', function () {
         <div class="${isInput ? 'warning-icon' : 'error-icon'}">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="${isInput
-        ? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
-        : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}"/>
+              d="${isInput ? 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z' : 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z'}"/>
           </svg>
         </div>
         <div class="${isInput ? 'warning-message' : 'error-message'}">${msg}</div>
@@ -255,14 +399,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
       utterance.onstart = () => {
         speakButton?.classList.add('speaking');
-        speakButton?.setAttribute('aria-label', 'Stop speaking');
-        speakButton?.setAttribute('title', 'Stop speaking');
       };
 
       utterance.onend = () => {
         speakButton?.classList.remove('speaking');
-        speakButton?.setAttribute('aria-label', 'Listen to advice');
-        speakButton?.setAttribute('title', 'Listen to advice');
         currentUtterance = null;
       };
 
