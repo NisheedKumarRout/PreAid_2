@@ -131,27 +131,80 @@ document.addEventListener('DOMContentLoaded', function () {
       if (e.key === 'Enter') getAdviceButton.click();
     });
   
-    async function getHealthAdvice(issue) {
-      const API_KEY = "AIzaSyDJP_zSrVOGFPrN0aNqeiGEiGexzAe0aNQ";
-      const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-  
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{ text: `Provide first aid or health advice for: ${issue}` }]
-          }]
-        })
-      });
-  
-      const data = await response.json();
-      if (response.ok && data.candidates && data.candidates[0]) {
-        return data.candidates[0].content.parts[0].text;
-      } else {
-        throw new Error(data.error ? data.error.message : "Failed to fetch advice");
-      }
+async function getHealthAdvice(issue) {
+    // WARNING: EXPOSING YOUR API KEY DIRECTLY IN CLIENT-SIDE CODE IS A MAJOR SECURITY RISK.
+    // ANYONE CAN SEE AND USE YOUR KEY.
+    // FOR PRODUCTION APPLICATIONS, YOU MUST USE A SECURE BACKEND TO CALL THE GEMINI API.
+    const API_KEY = "YOUR_SERVER_SIDE_API_KEY_HERE"; // REPLACE WITH YOUR ACTUAL SERVER-SIDE API KEY
+
+    // The API URL structure is correct for the Gemini API.
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+
+    try {
+        const response = await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                // The 'contents' structure for Gemini API is correct.
+                contents: [{
+                    parts: [{ text: `Provide first aid or health advice for: ${issue}` }]
+                }],
+                // Optional: Add generation config for more control (e.g., temperature, max output tokens)
+                generationConfig: {
+                    temperature: 0.7, // Controls randomness. Lower values for more deterministic responses.
+                    maxOutputTokens: 500, // Limits the length of the response.
+                },
+                // Optional: Add safety settings if you want to filter certain types of content.
+                safetySettings: [
+                    {
+                        category: "HARM_CATEGORY_HARASSMENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                    },
+                    {
+                        category: "HARM_CATEGORY_HATE_SPEECH",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                    },
+                    {
+                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                    },
+                    {
+                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
+                    },
+                ],
+            })
+        });
+
+        const data = await response.json();
+
+        // Check for 'ok' status and then parse the response.
+        // Google API errors often come with a non-2xx status, but sometimes with a '200 OK' and an 'error' field.
+        if (!response.ok) {
+            // If the response itself indicates an error (e.g., 400, 401, 403, 500)
+            let errorMessage = "API request failed.";
+            if (data && data.error && data.error.message) {
+                errorMessage = data.error.message;
+            }
+            throw new Error(`HTTP error! Status: ${response.status} - ${errorMessage}`);
+        }
+
+        // Check if the response contains candidates and content.
+        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
+            return data.candidates[0].content.parts[0].text;
+        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
+            // Handle cases where the prompt itself was blocked by safety settings
+            throw new Error(`Request blocked by safety settings: ${data.promptFeedback.blockReason}`);
+        } else {
+            // Fallback for unexpected successful response structure
+            throw new Error("Unexpected response format from Gemini API.");
+        }
+
+    } catch (error) {
+        console.error("Error fetching health advice:", error);
+        throw error; // Re-throw the error for the caller to handle
     }
+}
   
     function displayAdvice(advice, query) {
       const formattedAdvice = formatAdvice(advice);
