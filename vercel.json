@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "api/health-advice.js": {
+      "maxDuration": 30
+    },
+    "api/history.js": {
+      "maxDuration": 10
+    }
+  }
+}
