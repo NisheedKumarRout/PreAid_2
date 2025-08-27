@@ -2,13 +2,13 @@
   "name": "preaid-health-assistant",
   "version": "1.0.0",
   "description": "AI-Powered Health Assistant",
-  "main": "index.html",
+  "main": "public/index.html",
   "scripts": {
-    "build": "echo 'No build step required'",
+    "build": "echo 'Static files ready'",
     "start": "echo 'Static site'"
   },
   "dependencies": {},
   "engines": {
-    "node": "18.x"
+    "node": "22.x"
   }
 }
