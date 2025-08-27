@@ -318,13 +318,36 @@
     background: none;
     border: none;
     padding: 0.5rem 0.75rem;
-    cursor: pointer;
+    cursor: pointer !important;
     color: var(--primary-500);
     transition: color 0.2s ease;
+    outline: none;
   }
   
   #mic-button:hover {
     color: var(--primary-700);
+  }
+  
+  #mic-button.not-supported {
+    opacity: 0.5;
+    color: var(--neutral-400);
+  }
+  
+  #mic-button.listening {
+    color: var(--error-red);
+    animation: pulse 1.5s infinite;
+  }
+  
+  @keyframes pulse {
+    0% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+    }
   }
   
   .mic-icon {
@@ -392,7 +415,38 @@
   
   .result-actions {
     display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  .speech-controls {
+    display: flex;
+    align-items: center;
     gap: 8px;
+  }
+  
+  .speed-control {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.8rem;
+  }
+  
+  .speed-control label {
+    color: var(--neutral-600);
+    font-weight: 500;
+  }
+  
+  #speech-speed {
+    width: 60px;
+    height: 20px;
+  }
+  
+  #speed-value {
+    color: var(--primary-600);
+    font-weight: 600;
+    min-width: 25px;
   }
   
   /* Speech button styles */
@@ -797,6 +851,110 @@
     100% { opacity: 1; }
   }
   
+  /* History Panel Styles */
+  .history-panel {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background-color: var(--result-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 0.75rem;
+    transition: background-color 0.3s ease, border-color 0.3s ease;
+  }
+  
+  .history-panel h3 {
+    color: var(--body-text);
+    font-size: 1rem;
+    margin-bottom: 0.75rem;
+    transition: color 0.3s ease;
+  }
+  
+  .history-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background-color: var(--input-bg);
+    border: 1px solid var(--neutral-200);
+    border-radius: 0.5rem;
+    transition: all 0.2s ease;
+  }
+  
+  .history-content {
+    flex: 1;
+    cursor: pointer;
+  }
+  
+  .history-content:hover {
+    color: var(--primary-600);
+  }
+  
+  .history-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+  }
+  
+  .history-item:hover .history-actions {
+    opacity: 1;
+  }
+  
+  .history-btn {
+    background: none;
+    border: none;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .edit-btn {
+    color: var(--primary-600);
+  }
+  
+  .edit-btn:hover {
+    background-color: var(--primary-100);
+  }
+  
+  .share-btn {
+    color: var(--secondary-500);
+  }
+  
+  .share-btn:hover {
+    background-color: rgba(0, 188, 212, 0.1);
+  }
+  
+  .delete-btn {
+    color: var(--error-red);
+  }
+  
+  .delete-btn:hover {
+    background-color: rgba(244, 67, 54, 0.1);
+  }
+  
+  .history-issue {
+    font-weight: 500;
+    color: var(--body-text);
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+    transition: color 0.3s ease;
+  }
+  
+  .history-date {
+    font-size: 0.75rem;
+    color: var(--neutral-500);
+    transition: color 0.3s ease;
+  }
+
   /* Responsive Styles */
   @media (max-width: 768px) {
     .container {
@@ -851,5 +1009,11 @@
     }
     .share-modal-content {
       width: 95%;
+    }
+    .history-panel {
+      padding: 0.75rem;
+    }
+    .history-item {
+      padding: 0.5rem;
     }
   }
