@@ -6,8 +6,5 @@
     "api/history.js": {
       "maxDuration": 10
     }
-  },
-  "env": {
-    "GEMINI_API_KEY": "@gemini-api-key"
   }
 }
