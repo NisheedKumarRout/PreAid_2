@@ -9,6 +9,105 @@ document.addEventListener('DOMContentLoaded', function () {
   
     // Set current year in the footer
     currentYearElement.textContent = new Date().getFullYear();
+
+    // Add history panel functionality
+    async function loadHistoryPanel() {
+      const history = await loadUserHistory();
+      if (history.length > 0) {
+        showHistoryPanel(history);
+      }
+    }
+
+    function showHistoryPanel(history) {
+      let historyPanel = document.getElementById('history-panel');
+      if (!historyPanel) {
+        historyPanel = document.createElement('div');
+        historyPanel.id = 'history-panel';
+        historyPanel.className = 'history-panel';
+        document.querySelector('.form-container').appendChild(historyPanel);
+      }
+      
+      const recentHistory = history.slice(-5).reverse();
+      historyPanel.innerHTML = `
+        <h3>Recent Consultations</h3>
+        <div class="history-items">
+          ${recentHistory.map((item, index) => `
+            <div class="history-item" data-index="${history.length - 1 - index}">
+              <div class="history-content" onclick="fillInput('${item.issue.replace(/'/g, "\\'")}')">  
+                <div class="history-issue">${item.issue}</div>
+                <div class="history-date">${new Date(item.timestamp).toLocaleDateString()}</div>
+              </div>
+              <div class="history-actions">
+                <button class="history-btn edit-btn" onclick="editHistory(${history.length - 1 - index})" title="Edit">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="m18.5 2.5 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                </button>
+                <button class="history-btn share-btn" onclick="shareHistory(${history.length - 1 - index})" title="Share">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                  </svg>
+                </button>
+                <button class="history-btn delete-btn" onclick="deleteHistory(${history.length - 1 - index})" title="Delete">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/>
+                    <line x1="10" y1="11" x2="10" y2="17"/>
+                    <line x1="14" y1="11" x2="14" y2="17"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    window.fillInput = function(issue) {
+      healthIssueInput.value = issue;
+      healthIssueInput.focus();
+    }
+    
+    window.editHistory = function(index) {
+      loadUserHistory().then(history => {
+        if (history[index]) {
+          healthIssueInput.value = history[index].issue;
+          healthIssueInput.focus();
+        }
+      });
+    }
+    
+    window.shareHistory = function(index) {
+      loadUserHistory().then(history => {
+        if (history[index]) {
+          const item = history[index];
+          const shareText = `Health Issue: ${item.issue}\n\nAdvice: ${item.advice}`;
+          if (navigator.share) {
+            navigator.share({ title: 'Health Consultation', text: shareText });
+          } else {
+            navigator.clipboard.writeText(shareText).then(() => {
+              alert('Copied to clipboard!');
+            });
+          }
+        }
+      });
+    }
+    
+    window.deleteHistory = async function(index) {
+      if (confirm('Delete this consultation?')) {
+        try {
+          const response = await fetch('/api/history/' + index, {
+            method: 'DELETE',
+            headers: { 'X-User-Id': getUserId() }
+          });
+          if (response.ok) {
+            loadHistoryPanel();
+          }
+        } catch (error) {
+          console.error('Error deleting history:', error);
+        }
+      }
+    }
   
     // Theme management
     function setTheme(theme) {
@@ -45,7 +144,13 @@ document.addEventListener('DOMContentLoaded', function () {
     let isListening = false;
     const isRecognitionSupported = 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window;
   
-    if (isRecognitionSupported) {
+    function initSpeechRecognition() {
+      if (!isRecognitionSupported) {
+        micButton.classList.add('not-supported');
+        micButton.title = 'Voice input not supported in this browser';
+        return;
+      }
+      
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition = new SpeechRecognition();
       recognition.continuous = false;
@@ -55,31 +160,70 @@ document.addEventListener('DOMContentLoaded', function () {
       recognition.onresult = function (event) {
         const transcript = event.results[0][0].transcript;
         healthIssueInput.value = transcript;
-        stopListening();
-        setTimeout(() => {
-          getAdviceButton.click();
-        }, 300);
+        resetMicButton();
+        setTimeout(() => getAdviceButton.click(), 500);
       };
   
-      recognition.onend = stopListening;
-      recognition.onerror = function (event) {
-        console.error("Speech recognition error:", event.error);
-        stopListening();
+      recognition.onend = function() {
+        resetMicButton();
       };
-    } else {
-      micButton.style.opacity = '0.5';
-      micButton.style.cursor = 'not-allowed';
-      micButton.title = 'Voice input is not supported in your browser';
+      
+      recognition.onerror = function (event) {
+        console.error('Speech recognition error:', event.error);
+        resetMicButton();
+        if (event.error === 'not-allowed') {
+          micButton.classList.add('not-supported');
+          micButton.title = 'Microphone access denied';
+        }
+      };
+    }
+    
+    function resetMicButton() {
+      isListening = false;
+      micButton.classList.remove('listening');
+      micButton.title = 'Voice input';
+      const animation = document.getElementById('listening-animation');
+      if (animation) animation.remove();
     }
   
     micButton.addEventListener('click', function () {
-      if (!isRecognitionSupported) return;
-      isListening ? stopListening() : startListening();
-    });
-  
-    function startListening() {
-      if (recognition) {
+      if (!isRecognitionSupported || micButton.classList.contains('not-supported')) {
+        return;
+      }
+      
+      if (isListening) {
+        if (recognition) {
+          recognition.stop();
+        }
+        resetMicButton();
+      } else {
+        // Create fresh recognition instance each time
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+        
+        recognition.onresult = function (event) {
+          const transcript = event.results[0][0].transcript;
+          healthIssueInput.value = transcript;
+          resetMicButton();
+          setTimeout(() => getAdviceButton.click(), 500);
+        };
+    
+        recognition.onend = function() {
+          resetMicButton();
+        };
+        
+        recognition.onerror = function (event) {
+          console.error('Speech recognition error:', event.error);
+          resetMicButton();
+        };
+        
         isListening = true;
+        micButton.classList.add('listening');
+        micButton.title = 'Stop listening';
+        
         const animation = document.createElement('div');
         animation.id = 'listening-animation';
         animation.innerHTML = `<div class="dot dot1"></div><div class="dot dot2"></div><div class="dot dot3"></div>`;
@@ -88,27 +232,19 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
           recognition.start();
           setTimeout(() => {
-            if (isListening) stopListening();
-          }, 7000);
+            if (isListening && recognition) {
+              recognition.stop();
+              resetMicButton();
+            }
+          }, 8000);
         } catch (e) {
           console.error('Error starting speech recognition:', e);
-          stopListening();
+          resetMicButton();
         }
       }
-    }
-  
-    function stopListening() {
-      if (recognition && isListening) {
-        isListening = false;
-        const animation = document.getElementById('listening-animation');
-        if (animation) animation.remove();
-        try {
-          recognition.stop();
-        } catch {
-          console.log('Recognition already stopped');
-        }
-      }
-    }
+    });
+    
+    initSpeechRecognition();
   
     getAdviceButton.addEventListener('click', async function () {
       const healthIssue = healthIssueInput.value.trim();
@@ -122,87 +258,68 @@ document.addEventListener('DOMContentLoaded', function () {
       try {
         const advice = await getHealthAdvice(healthIssue);
         displayAdvice(advice, healthIssue);
+        loadHistoryPanel(); // Refresh history after new advice
       } catch (error) {
         showError(error.message || "Network error. Please check your connection and try again.");
       }
     });
+
+    // Load history panel on page load
+    loadHistoryPanel();
   
     healthIssueInput.addEventListener('keypress', function (e) {
       if (e.key === 'Enter') getAdviceButton.click();
     });
   
-async function getHealthAdvice(issue) {
-    // WARNING: EXPOSING YOUR API KEY DIRECTLY IN CLIENT-SIDE CODE IS A MAJOR SECURITY RISK.
-    // ANYONE CAN SEE AND USE YOUR KEY.
-    // FOR PRODUCTION APPLICATIONS, YOU MUST USE A SECURE BACKEND TO CALL THE GEMINI API.
-    const API_KEY = "YOUR_SERVER_SIDE_API_KEY_HERE"; // REPLACE WITH YOUR ACTUAL SERVER-SIDE API KEY
+// Generate or get user ID
+function getUserId() {
+    let userId = localStorage.getItem('preaid-user-id');
+    if (!userId) {
+        userId = 'user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('preaid-user-id', userId);
+    }
+    return userId;
+}
 
-    // The API URL structure is correct for the Gemini API.
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
-
+// Load user history
+async function loadUserHistory() {
     try {
-        const response = await fetch(API_URL, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                // The 'contents' structure for Gemini API is correct.
-                contents: [{
-                    parts: [{ text: `Provide first aid or health advice for: ${issue}` }]
-                }],
-                // Optional: Add generation config for more control (e.g., temperature, max output tokens)
-                generationConfig: {
-                    temperature: 0.7, // Controls randomness. Lower values for more deterministic responses.
-                    maxOutputTokens: 500, // Limits the length of the response.
-                },
-                // Optional: Add safety settings if you want to filter certain types of content.
-                safetySettings: [
-                    {
-                        category: "HARM_CATEGORY_HARASSMENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        category: "HARM_CATEGORY_HATE_SPEECH",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                    {
-                        category: "HARM_CATEGORY_DANGEROUS_CONTENT",
-                        threshold: "BLOCK_MEDIUM_AND_ABOVE",
-                    },
-                ],
-            })
+        const response = await fetch('/api/history', {
+            headers: { 'X-User-Id': getUserId() }
+        });
+        return response.ok ? await response.json() : [];
+    } catch {
+        return [];
+    }
+}
+
+async function getHealthAdvice(issue) {
+    try {
+        const response = await fetch('/api/health-advice', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-User-Id': getUserId()
+            },
+            body: JSON.stringify({ issue })
         });
 
-        const data = await response.json();
-
-        // Check for 'ok' status and then parse the response.
-        // Google API errors often come with a non-2xx status, but sometimes with a '200 OK' and an 'error' field.
         if (!response.ok) {
-            // If the response itself indicates an error (e.g., 400, 401, 403, 500)
-            let errorMessage = "API request failed.";
-            if (data && data.error && data.error.message) {
-                errorMessage = data.error.message;
+            if (response.status === 404) {
+                throw new Error('Server not running. Please start the backend server with "npm start"');
             }
-            throw new Error(`HTTP error! Status: ${response.status} - ${errorMessage}`);
+            const errorText = await response.text();
+            throw new Error(`Server error: ${response.status} - ${errorText}`);
         }
 
-        // Check if the response contains candidates and content.
-        if (data.candidates && data.candidates[0] && data.candidates[0].content && data.candidates[0].content.parts && data.candidates[0].content.parts[0]) {
-            return data.candidates[0].content.parts[0].text;
-        } else if (data.promptFeedback && data.promptFeedback.blockReason) {
-            // Handle cases where the prompt itself was blocked by safety settings
-            throw new Error(`Request blocked by safety settings: ${data.promptFeedback.blockReason}`);
-        } else {
-            // Fallback for unexpected successful response structure
-            throw new Error("Unexpected response format from Gemini API.");
-        }
-
+        const data = await response.json();
+        return data.advice;
     } catch (error) {
-        console.error("Error fetching health advice:", error);
-        throw error; // Re-throw the error for the caller to handle
+        console.error('Error fetching health advice:', error);
+        if (error.message.includes('Failed to fetch')) {
+            throw new Error('Cannot connect to server. Please make sure the backend is running on port 3000.');
+        }
+        throw error;
     }
 }
   
@@ -219,11 +336,18 @@ async function getHealthAdvice(issue) {
           </div>
           <h3 class="result-title">Health Advice for "${query}"</h3>
           <div class="result-actions">
-            <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
-              <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-            </button>
+            <div class="speech-controls">
+              <button id="speak-advice" class="speak-button" aria-label="Listen to advice" title="Listen to advice">
+                <svg xmlns="http://www.w3.org/2000/svg" class="speak-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              </button>
+              <div class="speed-control">
+                <label for="speech-speed">Speed:</label>
+                <input type="range" id="speech-speed" min="0.5" max="2" step="0.1" value="1" title="Speech Speed">
+                <span id="speed-value">1x</span>
+              </div>
+            </div>
             <button id="share-advice" class="share-button" aria-label="Share advice" title="Share advice">
               <svg xmlns="http://www.w3.org/2000/svg" class="share-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
@@ -292,8 +416,24 @@ async function getHealthAdvice(issue) {
       }
   
       const speakButton = document.getElementById('speak-advice');
+      const speedSlider = document.getElementById('speech-speed');
+      const speedValue = document.getElementById('speed-value');
+      
       if (speakButton) {
         speakButton.addEventListener('click', () => speakText(plainTextAdvice));
+      }
+      
+      if (speedSlider && speedValue) {
+        speedSlider.addEventListener('input', (e) => {
+          const speed = parseFloat(e.target.value);
+          speedValue.textContent = speed + 'x';
+          localStorage.setItem('speech-speed', speed);
+        });
+        
+        // Load saved speed
+        const savedSpeed = localStorage.getItem('speech-speed') || '1';
+        speedSlider.value = savedSpeed;
+        speedValue.textContent = savedSpeed + 'x';
       }
   
       const shareButton = document.getElementById('share-advice');
@@ -392,7 +532,12 @@ async function getHealthAdvice(issue) {
     function stripHtmlTags(html) {
       const div = document.createElement('div');
       div.innerHTML = html;
-      return div.textContent || div.innerText || '';
+      let text = div.textContent || div.innerText || '';
+      // Clean up text for speech
+      text = text.replace(/[*#_`~]/g, ''); // Remove markdown symbols
+      text = text.replace(/\s+/g, ' '); // Replace multiple spaces with single space
+      text = text.replace(/([.!?])\s*([A-Z])/g, '$1 $2'); // Add space after punctuation
+      return text.trim();
     }
   
     function formatAdvice(text) {
@@ -462,20 +607,24 @@ async function getHealthAdvice(issue) {
     function speakText(text) {
       if ('speechSynthesis' in window) {
         const speakButton = document.getElementById('speak-advice');
+        
+        // Stop current speech if playing
         if (window.speechSynthesis.speaking) {
           window.speechSynthesis.cancel();
-          if (currentUtterance && currentUtterance.text === text) {
-            speakButton?.classList.remove('speaking');
-            currentUtterance = null;
-            return;
-          }
+          speakButton?.classList.remove('speaking');
+          currentUtterance = null;
+          return;
         }
   
         const utterance = new SpeechSynthesisUtterance(text);
         const englishVoice = voices.find(voice => voice.lang.includes('en-'));
         if (englishVoice) utterance.voice = englishVoice;
   
-        utterance.rate = 1;
+        // Get speed from slider
+        const speedSlider = document.getElementById('speech-speed');
+        const speed = speedSlider ? parseFloat(speedSlider.value) : 1;
+        
+        utterance.rate = speed;
         utterance.pitch = 1;
         utterance.volume = 1;
   
@@ -495,24 +644,7 @@ async function getHealthAdvice(issue) {
           currentUtterance = null;
         };
   
-        if (text.length > 200) {
-          const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-          const speakSentences = (i = 0) => {
-            if (i < sentences.length) {
-              const sentenceUtterance = new SpeechSynthesisUtterance(sentences[i].trim());
-              if (englishVoice) sentenceUtterance.voice = englishVoice;
-              sentenceUtterance.rate = utterance.rate;
-              sentenceUtterance.pitch = utterance.pitch;
-              sentenceUtterance.onend = (i === sentences.length - 1)
-                ? utterance.onend
-                : () => speakSentences(i + 1);
-              window.speechSynthesis.speak(sentenceUtterance);
-            }
-          };
-          speakSentences();
-        } else {
-          window.speechSynthesis.speak(utterance);
-        }
+        window.speechSynthesis.speak(utterance);
       } else {
         alert('Text-to-speech is not supported in your browser.');
       }
