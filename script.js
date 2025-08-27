@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.deleteHistory = async function(index) {
       if (confirm('Delete this consultation?')) {
         try {
-          const response = await fetch('/api/history/' + index, {
+          const response = await fetch('/api/history?index=' + index, {
             method: 'DELETE',
             headers: { 'X-User-Id': getUserId() }
           });
@@ -304,21 +304,15 @@ async function getHealthAdvice(issue) {
             body: JSON.stringify({ issue })
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            if (response.status === 404) {
-                throw new Error('Server not running. Please start the backend server with "npm start"');
-            }
-            const errorText = await response.text();
-            throw new Error(`Server error: ${response.status} - ${errorText}`);
+            throw new Error(data.error || 'Failed to get health advice');
         }
 
-        const data = await response.json();
         return data.advice;
     } catch (error) {
         console.error('Error fetching health advice:', error);
-        if (error.message.includes('Failed to fetch')) {
-            throw new Error('Cannot connect to server. Please make sure the backend is running on port 3000.');
-        }
         throw error;
     }
 }
